@@ -32,6 +32,7 @@ import java.util.HashMap;
 import java.util.HashSet;
 import java.util.Iterator;
 import java.util.List;
+import java.util.Locale;
 import java.util.Map;
 import java.util.Set;
 import java.util.StringTokenizer;
@@ -52,9 +53,6 @@ import org.hibernate.SessionFactory;
 import org.hibernate.cfg.Configuration;
 import org.hibernate.cfg.Settings;
 import org.hibernate.connection.ConnectionProvider;
-import org.hibernate.dialect.Dialect;
-import org.hibernate.engine.SessionFactoryImplementor;
-import org.hibernate.id.SequenceGenerator;
 import org.hibernate.impl.SessionFactoryImpl;
 import org.hibernate.mapping.PersistentClass;
 import org.hibernate.mapping.Property;
@@ -451,11 +449,17 @@ public class XWikiHibernateStore extends XWikiHibernateBaseStore implements XWik
             String fullName = doc.getFullName();
 
             String sql = "select doc.fullName from XWikiDocument as doc where doc.fullName=:fullName";
+            if (!doc.getLocale().equals(Locale.ROOT)) {
+                sql += " and doc.language=:locale";
+            }
             if (monitor != null) {
                 monitor.setTimerDesc("hibernate", sql);
             }
             Query query = session.createQuery(sql);
             query.setString("fullName", fullName);
+            if (!doc.getLocale().equals(Locale.ROOT)) {
+                query.setString("language", doc.getLocale().toString());
+            }
             Iterator<String> it = query.list().iterator();
             while (it.hasNext()) {
                 if (fullName.equals(it.next())) {
